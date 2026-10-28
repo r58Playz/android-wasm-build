@@ -1,6 +1,6 @@
 # android-wasm-build
 
-The prebuilt inputs of the Android runner ([android-wasm](https://github.com/r58playz/android-wasm)), built by
+The prebuilt inputs of the Android runner, built by
 `.github/workflows/android-wasm-build.yml` on every push to `main` and published as one release (a uuid tag) that the
 runner's Makefile pins:
 
