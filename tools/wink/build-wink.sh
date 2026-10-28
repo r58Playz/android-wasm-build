@@ -16,7 +16,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 MESA_WINK_REPO="${MESA_WINK_REPO:-https://github.com/MercuryWorkshop/mesa-wink.git}"
-MESA_WINK_REF="${MESA_WINK_REF:-51eb6bdb32520dc3c50fee1d94242ae099bd6bac}"
+MESA_WINK_REF="${MESA_WINK_REF:-c4fca08de459c01a02fbd2eb556e7cad04b36947}"
 # Like IKVM_DIR, this can point at an existing working checkout.
 WINK_SRC_DIR="${MESA_WINK_DIR:-$SCRIPT_DIR/mesa-wink}"
 OUTPUT_DIR="${OUTPUT_DIR:-$SCRIPT_DIR/out}"
