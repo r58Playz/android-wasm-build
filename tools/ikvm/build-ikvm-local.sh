@@ -4,10 +4,10 @@
 
 set -euo pipefail
 
-# The WASM fork of IKVM. Its `wasm` branch carries what used to live in ikvm.patch,
-# as a series of individually described commits on top of ikvmnet/ikvm main.
+# The WASM fork of IKVM. Its `android` branch is its `wasm` branch (what used to live in ikvm.patch, as individually
+# described commits on top of ikvmnet/ikvm main) plus the Android runner's runtime work.
 IKVM_REPO="${IKVM_REPO:-https://github.com/r58playz/ikvm.git}"
-IKVM_REF="${IKVM_REF:-wasm}"
+IKVM_REF="${IKVM_REF:-android}"
 # Version stamp for the assemblies; unrelated to IKVM_REF, which is now a branch name
 # and not a valid semver.
 IKVM_VERSION="${IKVM_VERSION:-8.14.0}"

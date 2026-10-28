@@ -3,9 +3,11 @@
 /.nuget
 /tools/ikvm/ikvm
 /tools/ikvm/out
-/tools/native-deps/emscripten-glfw
-/tools/native-deps/libffi
-/tools/native-deps/lwjgl3
-/tools/native-deps/mesa-wink
-/tools/native-deps/out
-/tools/native-deps/.cache
+/tools/wink/mesa-wink
+/tools/wink/out
+/apps/catalog/androidx
+/apps/catalog/out
+/apps/catalog/.gradle
+/apps/catalog/.kotlin
+/apps/catalog/app/build
+/apps/catalog/catalog/build
