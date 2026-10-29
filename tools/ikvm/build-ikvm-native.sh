@@ -278,13 +278,15 @@ LIBJVM_FLAGS=(
 log "Building libjvm ..."
 mkdir -p "$TMP_DIR/libjvm"
 LIBJVM_OBJS=()
-for f in jni.c jni_vargs.c jvm_emscripten_dynlib.c; do
+for f in jni.c jni_vargs.c jvm_emscripten_dynlib.c jvm_native_bridge.c; do
     run_compile emcc "${LIBJVM_FLAGS[@]}" -std=c99 -c "$LIBJVM_SRC/$f" -o "$TMP_DIR/libjvm/${f%.c}.o"
     LIBJVM_OBJS+=("$TMP_DIR/libjvm/${f%.c}.o")
 done
 run_compile em++ "${LIBJVM_FLAGS[@]}" -std=c++11 -c "$LIBJVM_SRC/jvm.cpp" -o "$TMP_DIR/libjvm/jvm.o"
 LIBJVM_OBJS+=("$TMP_DIR/libjvm/jvm.o")
 create_archive "$NATIVE_OUT/libjvm.a" "${LIBJVM_OBJS[@]}"
+# IKVM_NATIVE_ONLY=libjvm: just that (build-libjvm-only.sh).
+[ "${IKVM_NATIVE_ONLY:-}" = libjvm ] && exit 0
 
 # ── libikvm ───────────────────────────────────────────────────────────────────
 # Independent of the JDK. Globbed, as src/libikvm/libikvm.clangproj does.
