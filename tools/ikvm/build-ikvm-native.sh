@@ -189,6 +189,11 @@ reset_lib_args
 # jdk_lib <name> <module> [<archive name>]
 jdk_lib() {
     local name="$1" module="$2" archive="${3:-lib$1}"
+    # IKVM_NATIVE_ONLY=<archive>: that library alone (after libjvm), then stop
+    if [ -n "${IKVM_NATIVE_ONLY:-}" ] && [ "$IKVM_NATIVE_ONLY" != "$archive" ]; then
+        reset_lib_args
+        return
+    fi
     local -a src_dirs=() includes=() srcs=() objs=() lib_defs=()
     local d spec f rel base skip x obj
     local -a file_cflags=()
@@ -264,6 +269,8 @@ jdk_lib() {
     done
     create_archive "$NATIVE_OUT/$archive.a" "${objs[@]}"
     reset_lib_args
+    [ "${IKVM_NATIVE_ONLY:-}" = "$archive" ] && exit 0
+    return 0
 }
 
 # ── libjvm ────────────────────────────────────────────────────────────────────
@@ -285,21 +292,24 @@ done
 run_compile em++ "${LIBJVM_FLAGS[@]}" -std=c++11 -c "$LIBJVM_SRC/jvm.cpp" -o "$TMP_DIR/libjvm/jvm.o"
 LIBJVM_OBJS+=("$TMP_DIR/libjvm/jvm.o")
 create_archive "$NATIVE_OUT/libjvm.a" "${LIBJVM_OBJS[@]}"
-# IKVM_NATIVE_ONLY=libjvm: just that (build-libjvm-only.sh).
+# IKVM_NATIVE_ONLY=libjvm: just that (build-libjvm-only.sh); another library's name: libjvm and that one.
 [ "${IKVM_NATIVE_ONLY:-}" = libjvm ] && exit 0
 
 # ── libikvm ───────────────────────────────────────────────────────────────────
 # Independent of the JDK. Globbed, as src/libikvm/libikvm.clangproj does.
 
-log "Building libikvm ..."
-mkdir -p "$TMP_DIR/libikvm"
-LIBIKVM_OBJS=()
-for f in "$IKVM_SRC/src/libikvm"/*.c; do
-    base="${f##*/}"
-    run_compile emcc -O2 -fPIC -pthread -DLINUX -c "$f" -o "$TMP_DIR/libikvm/${base%.c}.o"
-    LIBIKVM_OBJS+=("$TMP_DIR/libikvm/${base%.c}.o")
-done
-create_archive "$NATIVE_OUT/libikvm.a" "${LIBIKVM_OBJS[@]}"
+if [ -z "${IKVM_NATIVE_ONLY:-}" ] || [ "$IKVM_NATIVE_ONLY" = libikvm ]; then
+    log "Building libikvm ..."
+    mkdir -p "$TMP_DIR/libikvm"
+    LIBIKVM_OBJS=()
+    for f in "$IKVM_SRC/src/libikvm"/*.c; do
+        base="${f##*/}"
+        run_compile emcc -O2 -fPIC -pthread -DLINUX -c "$f" -o "$TMP_DIR/libikvm/${base%.c}.o"
+        LIBIKVM_OBJS+=("$TMP_DIR/libikvm/${base%.c}.o")
+    done
+    create_archive "$NATIVE_OUT/libikvm.a" "${LIBIKVM_OBJS[@]}"
+    [ "${IKVM_NATIVE_ONLY:-}" = libikvm ] && exit 0
+fi
 
 # ── java.base ─────────────────────────────────────────────────────────────────
 
@@ -342,6 +352,8 @@ L_JDK_LIBS=(libjava libnet)
 L_FILE_CFLAGS[UnixNativeDispatcher.c]="-include $SCRIPT_DIR/emscripten-stubs/ikvm_linux_errno.h"
 # WASMFS fails every byte-range lock, which FileChannel.tryLock then reports as held elsewhere (emscripten-stubs/ikvm_fcntl_lock.h)
 L_FILE_CFLAGS[UnixFileDispatcherImpl.c]="-include $SCRIPT_DIR/emscripten-stubs/ikvm_fcntl_lock.h"
+# emscripten has no socketpair, for the fd asynchronous closes dup2 over (emscripten-stubs/ikvm_socketpair.h)
+L_FILE_CFLAGS[UnixDispatcher.c]="-include $SCRIPT_DIR/emscripten-stubs/ikvm_socketpair.h"
 # Keep the OpenJDK checkout unchanged; compile the patched dispatcher in place of the original.
 mkdir -p "$TMP_DIR/libnio"
 NIO_DISPATCHER="$TMP_DIR/libnio/UnixNativeDispatcher.c"
